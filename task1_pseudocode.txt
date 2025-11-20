@@ -1,0 +1,171 @@
+Function power(a, b, m):
+  Computes (a^b) % m
+  res = 1
+  a = a % m
+  While b > 0:
+    If b is odd:
+      res = (res * a) % m
+    a = (a * a) % m
+    b = b // 2
+  Return res
+
+Function miller_rabin_is_prime(n, k=5):
+  If n < 2, return False
+  If n == 2 or n == 3, return True
+  If n is even, return False
+
+  Write n-1 as 2^s * d (d is odd)
+  s = 0
+  d = n - 1
+  While d is even:
+    d = d // 2
+    s = s + 1
+
+  For k rounds:
+    a = random integer between 2 and n-2
+    x = power(a, d, n)
+    If x == 1 or x == n - 1, continue to next round
+    
+    composite = True
+    For _ from 0 to s - 2:
+      x = power(x, 2, n)
+      If x == n - 1:
+        composite = False
+        Break
+    If composite is True, return False (n is composite)
+
+  Return True (n is probably prime)
+
+Function generate_random_prime(min_val):
+  Determine required_bit_length = min_val.bit_length() + 10
+  If required_bit_length < 128, set required_bit_length = 128
+
+  lower_bound_for_q = max(min_val + 1, 2^(required_bit_length - 1))
+  upper_bound_for_q = 2^required_bit_length - 1
+
+  If lower_bound_for_q is even, increment it by 1
+
+  For 2000 attempts:
+    If lower_bound_for_q > upper_bound_for_q, raise ValueError
+    num = random odd integer between lower_bound_for_q and upper_bound_for_q
+    If miller_rabin_is_prime(num), return num
+        
+  Raise ValueError "Could not find a suitable prime..."
+
+Function mod_inverse(a, m):
+  Store original m as m0
+  y = 0, x = 1
+  If m == 1, return 0
+  While a > 1:
+    q = a // m
+    t = m
+    m = a % m
+    a = t
+    t = y
+    y = x - q * y
+    x = t
+  If x < 0, x = x + m0
+  Return x
+
+Function generate_key_pair(n):
+  Initialize empty list e (private easy key)
+  Initialize sum_e = 0
+  For i from 0 to n-1:
+    If i == 0:
+      e_i = random integer between 2 and 50
+    Else:
+      e_i = sum_e + random integer between 1 and 100
+    Add e_i to e
+    Add e_i to sum_e
+
+  q = generate_random_prime(2 * e[n-1]) (private modulus, where e[n-1] is e_n)
+
+  Loop indefinitely:
+    w = random integer between 2 and q-1 (private multiplier)
+    If gcd(w, q) == 1, break loop
+
+  Initialize empty list h (public hard key)
+  For each e_val in e:
+    Add (w * e_val) mod q to h
+
+  Return h (public_key), (e, q, w) (private_key)
+
+Function encrypt(message_bits, public_key):
+  If length of message_bits != length of public_key, raise ValueError
+  Initialize ciphertext = 0
+  For i from 0 to length of message_bits - 1:
+    ciphertext = ciphertext + public_key[i] * message_bits[i]
+  Return ciphertext
+
+Function decrypt(ciphertext, private_key):
+  Unpack private_key into (e, q, w)
+  Set n = length of e
+
+  w_inv = mod_inverse(w, q)
+  c_prime = (ciphertext * w_inv) mod q
+
+  Initialize decrypted_message_bits as a list of n zeros
+  For i from n-1 down to 0:
+    If c_prime >= e[i]:
+      Set decrypted_message_bits[i] = 1
+      c_prime = c_prime - e[i]
+  Return decrypted_message_bits
+
+Function text_to_bits(text):
+  Initialize empty list bits
+  For each char in text:
+    ascii_val = ASCII value of char
+    binary_str = 8-bit binary representation of ascii_val
+    Extend bits with integers from binary_str
+  Return bits
+
+Function bits_to_text(bits):
+  Initialize empty list text_chars
+  For i from 0 to length of bits - 1, step 8:
+    byte_bits = slice of bits from i to i+7
+    If length of byte_bits == 8:
+      byte_str = string concatenation of byte_bits
+      ascii_val = integer value of byte_str (base 2)
+      Add character of ascii_val to text_chars
+  Return string concatenation of text_chars
+
+Main Program:
+  Set MIN_MESSAGE_LENGTH_CHARS = 500
+  Set N_BITS = 128 (block size)
+
+  Prepare original_plaintext (at least MIN_MESSAGE_LENGTH_CHARS long, starting with "To Tang Yang:")
+  Message: "Rolling Girl by wowaka - mawaru mawaru mawaru mawaru mawatte tobikonde mirai ni korogatte kizutsuite tsukare tsuzukete iki wo kirasete bokura wa mawaru doko made mo ashita ga mata bokura wo matteru sonna no mou shitteiru yo demo sore ga nani dato iu no darou mawaru mawaru mawaru mawaru mawatte kizutsuite korogatte tsuzukete iki wo kirasete nanika wo sagashite dakara ne boku wa mou ichido shinjiru koto wo kimeta yo kimi no koe ga boku wo yonda kibou wa mada nokotteru mawaru mawaru mawaru yo sekai wa mou kyou mo mirai wo kibou ni kaete mada tobenai kimi no tame ni boku ga iru kara mata waratte ii yo mawaru mawaru mawaru mawaru sekai wa mada mada aruku tsuzukete iku kara Rolling Girl sono koe wo mou ichido kikasete yo mawaru mawaru mawaru mawaru mawatte tobikonde mirai ni korogatte kizutsuite tsukare tsuzukete iki wo kirasete bokura wa mawaru doko made mo ashita ga mata bokura wo matteru sonna no mou shitteiru yo demo sore ga nani dato iu no darou"
+  Convert original_plaintext to full_message_bits
+  Pad full_message_bits to be a multiple of N_BITS
+
+  For Test Case 1:
+    Generate public_key1, private_key1 using N_BITS
+    Print key details
+    Initialize empty list encrypted_ciphertexts1
+    For each block of N_BITS from full_message_bits:
+      Encrypt block using public_key1
+      Add result to encrypted_ciphertexts1
+    Print first few ciphertext blocks
+    Initialize empty list decrypted_full_bits1
+    For each ciphertext_block in encrypted_ciphertexts1:
+      Decrypt ciphertext_block using private_key1
+      Extend decrypted_full_bits1 with result
+    Convert decrypted_full_bits1 (after trimming padding) to decrypted_text1
+    Print decrypted_text1
+    Verify if decrypted_text1 == original_plaintext
+
+  For Test Case 2: (Repeat similar steps as Test Case 1 with new keys)
+    Generate public_key2, private_key2 using N_BITS
+    Print key details
+    Initialize empty list encrypted_ciphertexts2
+    For each block of N_BITS from full_message_bits:
+      Encrypt block using public_key2
+      Add result to encrypted_ciphertexts2
+    Print first few ciphertext blocks
+    Initialize empty list decrypted_full_bits2
+    For each ciphertext_block in encrypted_ciphertexts2:
+      Decrypt ciphertext_block using private_key2
+      Extend decrypted_full_bits2 with result
+    Convert decrypted_full_bits2 (after trimming padding) to decrypted_text2
+    Print decrypted_text2
+    Verify if decrypted_text2 == original_plaintext
