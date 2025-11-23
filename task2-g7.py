@@ -117,13 +117,6 @@ class FirewallManager:
         
 def main():
     fw = FirewallManager()
-    # fw.add_rule(1, 'both', '192.168.1.1')
-    # fw.add_rule(1, 'in', '192.168.1.2')
-    # fw.list_rules(None, None, None)
-    # fw.add_rule(2, 'both', '192.168.1.3')
-    # fw.list_rules(None, None, None)
-    # fw.remove_rule(1, 'in')
-    # fw.list_rules(None, None, None)
 
     # Helper function to check if an IP address is valid
     def is_valid_ip_or_range(ip):
