@@ -1,6 +1,6 @@
 import ipaddress
 
-class FirewallManager:    
+class FirewallManager:
     def __init__(self):
         self.rule_list = [] # list of dictionaries: {"rule": int, "direction": "in"|"out"|"both", "address": String} per value
 
@@ -115,103 +115,105 @@ class FirewallManager:
         for r in rules:
             print(f"Rule {r['rule']}: {r['direction']} {r['address']}")
         
+# Helper function to check if an IP address is valid
+def is_valid_ip_or_range(ip):
+    # Check if input is a single IP address and validate
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        pass
+
+    # Check if input is a range e.g. 10.0.0.1 - 10.0.0.128
+    if "-" in ip:
+        range_parts = ip.split("-")
+        if len(range_parts) != 2:
+            return False
+
+        start, end = range_parts[0].strip(), range_parts[1].strip()
+
+        # Validate both addresses in range
+        try:
+            range_start = ipaddress.ip_address(start)
+            range_end = ipaddress.ip_address(end)
+        except ValueError:
+            return False
+
+        # Check if start address is less than end address
+        if int(range_start) < int(range_end):
+            return True
+        else:
+            return False
+        
+    return False
+        
+# Function to handle command parsing
+def parse_command(fw_manager, line):
+    tokens = line.split()
+    if not tokens:
+        return None
+    
+    # Extract command and arguments
+    command = tokens[0]
+    args = tokens[1:]
+
+    # Initialise default values
+    rule = None
+    direction = None
+    addr = None
+
+    for arg in args:
+        # direction
+        if arg == "-in":
+            direction = "in"
+            continue
+        if arg == "-out":
+            direction = "out"
+            continue
+
+        # rule number
+        if arg.isdigit():
+            rule = int(arg)
+            continue
+
+        # IP address
+        if is_valid_ip_or_range(arg):
+            addr = arg
+            continue
+
+        print(f"Unrecognized argument: {arg}")
+
+    # Handle commands by case
+    match command:
+        case "add":
+            if rule is not None and rule < 1: # Check that rule number is valid
+                print("Error: Invalid rule number")
+            elif addr is not None: # Check that IP address is specified
+                fw_manager.add_rule(rule, direction, addr)
+            else:
+                print("Error: A valid IP address must be specified to add a rule.")
+
+        case "remove":
+            if rule is not None:
+                fw_manager.remove_rule(rule, direction)
+            else:
+                print("Error: A rule number must be specified to remove a rule.")
+        
+        case "list":
+            if rule is not None and rule < 1:
+                print("Error: Invalid rule number")
+            else:
+                fw_manager.list_rules(rule, direction, addr)
+        
+        case _:
+            print(f"Unrecognized command: {command}")
+
+# Main function to run the firewall manager CLI
 def main():
     fw = FirewallManager()
-
-    # Helper function to check if an IP address is valid
-    def is_valid_ip_or_range(ip):
-        # Check if input is a single IP address and validate
-        try:
-            ipaddress.ip_address(ip)
-            return True
-        except ValueError:
-            pass
-
-        # Check if input is a range e.g. 10.0.0.1 - 10.0.0.128
-        if "-" in ip:
-            range_parts = ip.split("-")
-            if len(range_parts) != 2:
-                return False
-
-            start, end = range_parts[0].strip(), range_parts[1].strip()
-
-            # Validate both addresses in range
-            try:
-                range_start = ipaddress.ip_address(start)
-                range_end = ipaddress.ip_address(end)
-            except ValueError:
-                return False
-
-            # Check if start address is less than end address
-            if int(range_start) < int(range_end):
-                return True
-            else:
-                return False
-            
-        return False
-        
-    # Function to handle command parsing
-    def parse_command(fw_manager, line):
-        tokens = line.split()
-        if not tokens:
-            return None
-        
-        # Extract command and arguments
-        command = tokens[0]
-        args = tokens[1:]
-
-        # Initialise default values
-        rule = None
-        direction = None
-        addr = None
-
-        for arg in args:
-            # direction
-            if arg == "-in":
-                direction = "in"
-                continue
-            if arg == "-out":
-                direction = "out"
-                continue
-
-            # rule number
-            if arg.isdigit():
-                rule = int(arg)
-                continue
-
-            # IP address
-            if is_valid_ip_or_range(arg):
-                addr = arg
-                continue
-
-            print(f"Unrecognized argument: {arg}")
-
-        # Handle commands by case
-        match command:
-            case "add":
-                if rule is not None and rule < 1: # Check that rule number is valid
-                    print("Error: Invalid rule number")
-                elif addr is not None: # Check that IP address is specified
-                    fw_manager.add_rule(rule, direction, addr)
-                else:
-                    print("Error: A valid IP address must be specified to add a rule.")
-
-            case "remove":
-                if rule is not None:
-                    fw_manager.remove_rule(rule, direction)
-                else:
-                    print("Error: A rule number must be specified to remove a rule.")
-            
-            case "list":
-                if rule is not None and rule < 1:
-                    print("Error: Invalid rule number")
-                else:
-                    fw_manager.list_rules(rule, direction, addr)
-            
-            case _:
-                print(f"Unrecognized command: {command}")
             
     print("Firewall Manager CLI")
+    print("Type 'exit' to quit.")
 
     while(True):
         command_input = input()
