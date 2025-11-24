@@ -46,7 +46,6 @@ def miller_rabin_is_prime(n, k=5):
 
     return True # n is probably prime
 
-
 def generate_random_prime(min_val):
     """Generates a random prime number greater than min_val"""
     # Calculate required bit length with 10-bit margin
@@ -81,7 +80,6 @@ def generate_random_prime(min_val):
             return num
         
     raise ValueError(f"Could not find suitable prime after {max_attempts} attempts")
-
 
 def mod_inverse(a, m):
     """Computes modular inverse using Extended Euclidean Algorithm"""
@@ -188,12 +186,14 @@ def main():
     print(f"--- Merkle-Hellman Knapsack Cryptosystem (Block Size N = {N_BITS} bits) ---")
 
     my_name = "Tang Yang"
-    rolling_girl_romaji = "Rolling Girl by wowaka - mawaru mawaru mawaru mawaru mawatte tobikonde mirai ni korogatte kizutsuite tsukare tsuzukete iki wo kirasete bokura wa mawaru doko made mo ashita ga mata bokura wo matteru sonna no mou shitteiru yo demo sore ga nani dato iu no darou mawaru mawaru mawaru mawaru mawatte kizutsuite korogatte tsuzukete iki wo kirasete nanika wo sagashite dakara ne boku wa mou ichido shinjiru koto wo kimeta yo kimi no koe ga boku wo yonda kibou wa mada nokotteru mawaru mawaru mawaru yo sekai wa mou kyou mo mirai wo kibou ni kaete mada tobenai kimi no tame ni boku ga iru kara mata waratte ii yo mawaru mawaru mawaru mawaru sekai wa mada mada aruku tsuzukete iku kara Rolling Girl sono koe wo mou ichido kikasete yo mawaru mawaru mawaru mawaru mawatte tobikonde mirai ni korogatte kizutsuite tsukare tsuzukete iki wo kirasete bokura wa mawaru doko made mo ashita ga mata bokura wo matteru sonna no mou shitteiru yo demo sore ga nani dato iu no darou"
-    
-    base_plaintext = f"To {my_name}: {rolling_girl_romaji} "
+
+    # reference: Chapter 1, https://ia601800.us.archive.org/5/items/blackbeautyautob00sewe/blackbeautyautob00sewe.pdf
+    black_beauty = "The first place that I can well remember, was a large pleasant meadow with a pond of clear water in it. Some trees overshadowed the pond, and rushes and water-lilies grew at the deep end. Over the hedge on one side we looked into a ploughed field ; and on the other, we looked over a gate at our master's house which stood by the roadside. At the top of the meadow was a plantation of fir-trees ; and at the bottom, a running brook overhung by a steep bank. Whilst I was young I lived upon my mother's milk, as I could not eat grass. In the daytime I ran by her side, and at night I lay down close by her. When it was hot, we used to stand by the pond in the shade of the trees ; and when it was cold, we had a nice warm shed near the plantation. As soon as I was old enough to eat grass, my mother"
+            
+    base_plaintext = f"To {my_name}: {black_beauty} "
     
     while len(base_plaintext) < MIN_MESSAGE_LENGTH_CHARS:
-        base_plaintext += rolling_girl_romaji + " "
+        base_plaintext += black_beauty + " "        # repeatedly concatenate unitl minimum length is reached
     
     original_plaintext = base_plaintext[:MIN_MESSAGE_LENGTH_CHARS]
 
@@ -201,8 +201,8 @@ def main():
 
     full_message_bits = text_to_bits(original_plaintext)
     
-    padding_needed = N_BITS - (len(full_message_bits) % N_BITS)
-    if padding_needed != N_BITS:
+    padding_needed = N_BITS - (len(full_message_bits) % N_BITS)     # ensures length of message is a multiple of N_BITS
+    if padding_needed != N_BITS:        
         full_message_bits.extend([0] * padding_needed)
 
     print(f"\nFull message in bits (total {len(full_message_bits)} bits, first 16 and last 16): {full_message_bits[:16]}...{full_message_bits[-16:]}")
@@ -212,7 +212,7 @@ def main():
     public_key1, private_key1 = generate_key_pair(N_BITS)
     e1, q1, w1 = private_key1
     
-    print("\n--- Key Pair 1 Details (for Report/Appendix) ---")
+    print("\n--- Key Pair 1 Details ---")
     print(f"Public Key (h1, first 10 elements): {public_key1[:10]}...")
     print(f"Private Key (e1, first 10 elements): {e1[:10]}...")
     print(f"Private Key (q1): {q1}")
@@ -256,7 +256,7 @@ def main():
     public_key2, private_key2 = generate_key_pair(N_BITS)
     e2, q2, w2 = private_key2
 
-    print("\n--- Key Pair 2 Details (for Report/Appendix) ---")
+    print("\n--- Key Pair 2 Details ---")
     print(f"Public Key (h2, first 10 elements): {public_key2[:10]}...")
     print(f"Private Key (e2, first 10 elements): {e2[:10]}...")
     print(f"Private Key (q2): {q2}")
@@ -292,7 +292,6 @@ def main():
         print("\nVerification 2: Decryption FAILED! Original and decrypted plaintexts DO NOT match.")
         print(f"Original (first 50): {original_plaintext[:50]}")
         print(f"Decrypted (first 50): {decrypted_text2[:50]}")
-
 
 if __name__ == "__main__":
     main()
