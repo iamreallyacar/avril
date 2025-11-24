@@ -76,7 +76,7 @@ class FirewallManager:
             for r in self.rule_list:
                 if rule_filter is not None and r["rule"] != rule_filter:
                     continue
-                if direction_filter is not None and r["direction"] != direction_filter:
+                if direction_filter is not None and (r["direction"] != direction_filter and r["direction"] != "both"):
                     continue
                 if addr_filter is not None and r["address"] != addr_filter:
                     continue
@@ -93,7 +93,7 @@ class FirewallManager:
             for r in self.rule_list:
                 if rule_filter is not None and r["rule"] != rule_filter:
                     continue
-                if direction_filter is not None and r["direction"] != direction_filter:
+                if direction_filter is not None and (r["direction"] != direction_filter and r["direction"] != "both"):
                     continue
                 if not is_addr_range(r["address"]): # If rule address is a single IP address, just check if it is within specified range
                     rule_ip = ipaddress.ip_address(r["address"])
