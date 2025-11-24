@@ -141,12 +141,12 @@ Main Program:
   For Test Case 1:
     Generate public_key1, private_key1 using N_BITS
     Print key details
-    Initialize empty list encrypted_ciphertexts1
+    Initialise empty list encrypted_ciphertexts1
     For each block of N_BITS from full_message_bits:
       Encrypt block using public_key1
       Add result to encrypted_ciphertexts1
     Print first few ciphertext blocks
-    Initialize empty list decrypted_full_bits1
+    Initialise empty list decrypted_full_bits1
     For each ciphertext_block in encrypted_ciphertexts1:
       Decrypt ciphertext_block using private_key1
       Extend decrypted_full_bits1 with result
@@ -157,12 +157,12 @@ Main Program:
   For Test Case 2: (Repeat similar steps as Test Case 1 with new keys)
     Generate public_key2, private_key2 using N_BITS
     Print key details
-    Initialize empty list encrypted_ciphertexts2
+    Initialise empty list encrypted_ciphertexts2
     For each block of N_BITS from full_message_bits:
       Encrypt block using public_key2
       Add result to encrypted_ciphertexts2
     Print first few ciphertext blocks
-    Initialize empty list decrypted_full_bits2
+    Initialise empty list decrypted_full_bits2
     For each ciphertext_block in encrypted_ciphertexts2:
       Decrypt ciphertext_block using private_key2
       Extend decrypted_full_bits2 with result
