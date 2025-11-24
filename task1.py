@@ -193,7 +193,7 @@ def main():
     base_plaintext = f"To {my_name}: {black_beauty} "
     
     while len(base_plaintext) < MIN_MESSAGE_LENGTH_CHARS:
-        base_plaintext += black_beauty + " "        # repeatedly concatenate unitl minimum length is reached
+        base_plaintext += black_beauty + " "        # repeatedly concatenate until minimum length is reached
     
     original_plaintext = base_plaintext[:MIN_MESSAGE_LENGTH_CHARS]
 
