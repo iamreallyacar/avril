@@ -207,7 +207,6 @@ def main():
 
     print(f"\nFull message in bits (total {len(full_message_bits)} bits, first 16 and last 16): {full_message_bits[:16]}...{full_message_bits[-16:]}")
 
-
     # --- Test Case 1 ---
     print("\n" + "="*30 + " Test Case 1 " + "="*30)
     print("\nGenerating Key Pair 1...")
@@ -250,7 +249,6 @@ def main():
         print("\nVerification 1: Decryption FAILED! Original and decrypted plaintexts DO NOT match.")
         print(f"Original (first 50): {original_plaintext[:50]}")
         print(f"Decrypted (first 50): {decrypted_text1[:50]}")
-
 
     # --- Test Case 2 ---
     print("\n" + "="*30 + " Test Case 2 " + "="*30)
