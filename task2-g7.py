@@ -35,67 +35,65 @@ class FirewallManager:
         # Check if rule exists
         if rule_to_remove:
             
-            # If specified direction matches rule or is not specified, remove rule
+            # Case 1: Remove entire rule if directions match or specified direction is 'both'
             if rule_to_remove["direction"] == direction or direction == "both":
                 self.rule_list.remove(rule_to_remove)
                 print(f"Removed rule number {rule}")
 
-            # If specified direction is 'in' or 'out' and rule's direction is 'both', update rule to remaining direction
-            elif rule_to_remove["direction"] == 'both' and direction != 'both':
+            # Case 2: Remove only one direction from a 'both' rule
+            elif rule_to_remove["direction"] == "both" and direction != "both":
                 match direction:
-                    case 'in':
+                    case "in":
                         rule_to_remove.update({"direction": "out"})
-                    case 'out':
+                    case "out":
                         rule_to_remove.update({"direction": "in"})
                 print(f"Removed rule number {rule}: {direction}")
 
             # If specified direction does not match rule's direction
             else:
                 print(f"Error: Rule number {rule} does not match direction {direction}.")
-                return
         else: 
             print(f"Error: Rule number {rule} not found.")
-            return
     
     # Function to list rules with optional filters
-    def list_rules(self, rule, direction, addr): # list [rule] [-in|-out] [addr]
+    def list_rules(self, rule_filter, direction_filter, addr_filter): # list [rule] [-in|-out] [addr]
         if not self.rule_list:
             print("No firewall rules configured.")
             return
         
         print("Firewall Rules:")
 
-        rules = []
+        rules_to_list = []
 
         # Helper function to check if address is a range
         def is_addr_range(ip):
             return "-" in ip if ip else False
 
         # If addr is a single IP address
-        if not is_addr_range(addr): 
+        if not is_addr_range(addr_filter): 
             
             # Iterate over rule list and skip rules that do not match filters
             for r in self.rule_list:
-                if rule is not None and r["rule"] != rule:
+                if rule_filter is not None and r["rule"] != rule_filter:
                     continue
-                if direction is not None and r["direction"] != direction:
+                if direction_filter is not None and r["direction"] != direction_filter:
                     continue
-                if addr is not None and r["address"] != addr:
+                if addr_filter is not None and r["address"] != addr_filter:
                     continue
 
-                rules.append(r)
+                rules_to_list.append(r)
 
         # If addr is a range of IP addresses
         else:
             # Split addr into start and end IP addresses
-            start_str, end_str = addr.split("-")
+            start_str, end_str = addr_filter.split("-")
             range_start = ipaddress.ip_address(start_str.strip())
             range_end   = ipaddress.ip_address(end_str.strip())
 
             for r in self.rule_list:
-                if rule is not None and r["rule"] != rule:
+                if rule_filter is not None and r["rule"] != rule_filter:
                     continue
-                if direction is not None and r["direction"] != direction:
+                if direction_filter is not None and r["direction"] != direction_filter:
                     continue
                 if not is_addr_range(r["address"]): # If rule address is a single IP address, just check if it is within specified range
                     rule_ip = ipaddress.ip_address(r["address"])
@@ -110,9 +108,9 @@ class FirewallManager:
                     if not (range_start <= rule_start and range_end >= rule_end):
                         continue
 
-                rules.append(r)
+                rules_to_list.append(r)
 
-        for r in rules:
+        for r in rules_to_list:
             print(f"Rule {r['rule']}: {r['direction']} {r['address']}")
         
 # Helper function to check if an IP address is valid
@@ -130,7 +128,8 @@ def is_valid_ip_or_range(ip):
         if len(range_parts) != 2:
             return False
 
-        start, end = range_parts[0].strip(), range_parts[1].strip()
+        start = range_parts[0].strip()
+        end = range_parts[1].strip()
 
         # Validate both addresses in range
         try:
@@ -139,11 +138,8 @@ def is_valid_ip_or_range(ip):
         except ValueError:
             return False
 
-        # Check if start address is less than end address
-        if int(range_start) < int(range_end):
-            return True
-        else:
-            return False
+        # Return true if start address is less than or equal to end address
+        return range_start <= range_end
         
     return False
         
@@ -151,16 +147,14 @@ def is_valid_ip_or_range(ip):
 def parse_command(fw_manager, line):
     tokens = line.split()
     if not tokens:
-        return None
+        return
     
     # Extract command and arguments
     command = tokens[0]
     args = tokens[1:]
 
     # Initialise default values
-    rule = None
-    direction = None
-    addr = None
+    rule, direction, addr = None, None, None
 
     for arg in args:
         # direction
@@ -174,6 +168,9 @@ def parse_command(fw_manager, line):
         # rule number
         if arg.isdigit():
             rule = int(arg)
+            if rule < 1:
+                print("Error: Invalid rule number.")
+                return
             continue
 
         # IP address
@@ -182,31 +179,30 @@ def parse_command(fw_manager, line):
             continue
 
         print(f"Unrecognized argument: {arg}")
+        return
 
     # Handle commands by case
     match command:
         case "add":
-            if rule is not None and rule < 1: # Check that rule number is valid
-                print("Error: Invalid rule number")
-            elif addr is not None: # Check that IP address is specified
+            if addr is not None: # Check that IP address is specified
                 fw_manager.add_rule(rule, direction, addr)
             else:
                 print("Error: A valid IP address must be specified to add a rule.")
+                return
 
         case "remove":
             if rule is not None:
                 fw_manager.remove_rule(rule, direction)
             else:
                 print("Error: A rule number must be specified to remove a rule.")
+                return
         
         case "list":
-            if rule is not None and rule < 1:
-                print("Error: Invalid rule number")
-            else:
-                fw_manager.list_rules(rule, direction, addr)
+            fw_manager.list_rules(rule, direction, addr)
         
         case _:
             print(f"Unrecognized command: {command}")
+            return
 
 # Main function to run the firewall manager CLI
 def main():
