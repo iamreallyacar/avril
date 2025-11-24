@@ -207,6 +207,8 @@ def main():
 
     print(f"\nFull message in bits (total {len(full_message_bits)} bits, first 16 and last 16): {full_message_bits[:16]}...{full_message_bits[-16:]}")
 
+
+    # --- Test Case 1 ---
     print("\n" + "="*30 + " Test Case 1 " + "="*30)
     print("\nGenerating Key Pair 1...")
     public_key1, private_key1 = generate_key_pair(N_BITS)
