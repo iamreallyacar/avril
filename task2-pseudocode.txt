@@ -1,0 +1,191 @@
+Class FirewallManager
+    Attributes
+        rule_list: List
+
+Function add_rule(rule, direction, addr):
+
+    If rule is None:
+        rule = 1
+
+    If direction is None:
+        direction = "both"
+
+    If rule number is in rule_list:
+        For r in rule_list:
+            If r.rule >= rule:
+                r.rule += 1
+
+    Add {"rule": rule, "direction": direction, "address": addr} to rule_list
+
+    Sort rule_list by rule number
+
+    Print f"Added rule number <rule>: <direction> <addr>"
+
+Function remove_rule(rule, direction):
+
+    If direction is None:
+        direction = "both"
+    
+    rule_to_remove = for r in rule_list find rule.rule == rule_number
+
+    If rule_to_remove exists in rule_list:
+        
+        If rule_to_remove.direction == direction or direction == "both":
+            Remove rule_to_remove from rule_list
+            Print "Removed rule number <rule>"
+
+        Else if rule_to_remove.direction == "both" and direction is not "both":
+            Case of direction:
+                "in":
+                    rule_to_remove.direction = "out"
+                "out":
+                    rule_to_remove.direction = "in"
+
+            Print "Removed rule number <rule>: <direction>"
+
+        Else:
+            Print "Error: Rule number <rule> does not match direction <direction>."
+
+    Else:
+        Print "Error: Rule number not found."
+
+Function list_rules(rule_filter, direction_filter, addr_filter):
+    If rule_list is empty:
+        Print "No firewall rules configured."
+        Return
+
+    Print "Firewall Rules:"
+    Initialise rules_to_list as an empty List
+
+    If addr_filter is not a range:
+        For r in rule_list:
+            If rule_filter is specified and does not match:
+                Continue
+            If direction_filter is specified and does not match:
+                Continue
+            If addr_filter is specified and addr does not match:
+                Continue
+
+        Add r to rules_to_list
+
+    Else:
+        Split addr into range_start and range_end
+
+        For r in rule_list:
+
+            If rule_filter is specified and does not match:
+                Continue
+            If direction_filter is specified and does not match:
+                Continue
+            If r.address is not a range:
+                If ip_value not within [range_start, range_end]:
+                    Continue
+            Else:
+                Split r.address into rule_start, rule_end
+
+                If [rule_start, rule_end] not within [range_start, range_end]:
+                    Continue
+
+            Add r to rule_list
+
+    For r in rules_to_list:
+        Print "Rule <r.rule>: <r.direction> <r.address>"
+
+Function is_valid_ip_or_range(ip):
+    Try:
+        Parse ip as an IP address
+        return True
+    Catch error:
+        Pass
+
+    If ip contains "-":
+        Split ip by "-"
+
+        If result of split is more than 2 Strings:
+            return False
+        
+        Split ip into start and end
+
+        Try:
+            range_start = parse start as an IP address
+            range_end = parse end as an IP address 
+        Catch error:
+            Return False
+
+        Return True if range_start is less than range_end
+
+    Return False
+
+
+Function parse_command(fw_manager, line):
+    Split line into tokens
+    If tokens is empty:
+        Return
+
+    command = first item in tokens
+    args = list from second item in tokens
+
+    Set rule, direction, addr as None
+
+    For arg in args:
+        If arg == "-in":
+            direction == "in"
+            Continue
+
+        If arg == "-out":
+            direction == "out"
+            Continue
+        
+        If arg is a number:
+            rule = arg
+            If rule < 1:
+                Print "Error: Invalid rule number."
+                Return
+
+            Continue
+
+        If is_valid_ip_or_range(arg):
+            addr = arg
+            Continue
+        
+        Print "Unrecognised argument: <arg>"
+
+    
+    Case of command:
+        "add":
+            If addr is specified:
+                fw_manager.add_rule(rule, direction, addr)
+            Else:
+                Print "Error: A valid IP address must be specified to add a rule."
+                Return
+
+        "remove":
+            If rule is specified:
+                fw_manager.remove_rule(rule, direction)
+            Else:
+                Print "Error: A rule number must be specified to remove a rule."
+                Return
+        
+        "list":
+            fw_manager.list_rules(rule, direction, addr)
+
+
+        Any other command:
+            Print "Unrecognised command: <command>"
+            Return
+
+    
+Main Program:
+    Initialise FirewallManager fw
+
+    Print "Firewall Manager CLI"
+    Print "Type 'exit' to quit"
+
+    Loop forever:
+        Read user input as command_input
+
+        If command_input equals "exit":
+            Print "Exited Firewall Manager CLI."
+            End loop
+
+        Call parse_command(fw, command_input)
